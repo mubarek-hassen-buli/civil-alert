@@ -19,9 +19,6 @@ import { cn } from "@/app/lib/utils";
 // Mapping navigation items based on the new sidebar design logic, adapted to CivicAlerts
 const navItems = [
   { name: "Home", href: "/dashboard", icon: Home, count: 10 },
-  { name: "Reports", href: "/reports", icon: CheckSquare },
-  { name: "Users", href: "/users", icon: Users, count: 2 },
-  { name: "Agencies", href: "/agencies", icon: Box },
   { name: "Subscriptions", href: "/subscriptions", icon: CreditCard },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Help & Support", href: "/support", icon: HelpCircle },

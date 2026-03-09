@@ -49,7 +49,7 @@ const MOCK_POSTS = [
 ];
 
 export default function DashboardHomeFeed() {
-  const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
+  const [selectedArea, setSelectedArea] = useState<string>("downtown");
 
   return (
     <div className="flex w-full min-h-screen justify-between">
@@ -58,26 +58,28 @@ export default function DashboardHomeFeed() {
       <div className="flex-1 max-w-[640px] flex flex-col min-h-screen border-r border-slate-100 mx-auto xl:mx-0">
         <div className="px-4 py-4 sm:px-6 sm:py-6 flex flex-col flex-1">
          
-         {/* Top Tabs */}
-         <div className="flex items-center w-full border-b border-slate-200 mb-6 relative">
-            <button 
-               onClick={() => setActiveTab("foryou")}
-               className={`flex-1 pb-4 text-[15px] font-semibold transition-colors relative ${activeTab === "foryou" ? "text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
-            >
-               For You
-               {activeTab === "foryou" && (
-                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary rounded-t-full"></div>
-               )}
-            </button>
-            <button 
-               onClick={() => setActiveTab("following")}
-               className={`flex-1 pb-4 text-[15px] font-semibold transition-colors relative ${activeTab === "following" ? "text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
-            >
-               Following
-               {activeTab === "following" && (
-                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary rounded-t-full"></div>
-               )}
-            </button>
+         {/* Area Selection Header */}
+         <div className="flex items-center justify-between w-full mb-8 relative">
+            <div className="flex flex-col">
+               <span className="text-xl font-extrabold text-slate-900 tracking-tight">Active Reports</span>
+               <span className="text-[13px] text-slate-500 font-medium">Monitoring activity in your selected area</span>
+            </div>
+            
+            <div className="relative">
+               <select 
+                  value={selectedArea}
+                  onChange={(e) => setSelectedArea(e.target.value)}
+                  className="appearance-none bg-white border border-slate-200 text-slate-800 text-[14px] font-bold py-2 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm hover:border-slate-300 transition-colors"
+               >
+                  <option value="downtown">Downtown District</option>
+                  <option value="uptown">Uptown Suburbs</option>
+                  <option value="industrial">Industrial Zone</option>
+                  <option value="citywide">Citywide (All)</option>
+               </select>
+               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+               </div>
+            </div>
          </div>
 
          {/* Call to Create Report */}
