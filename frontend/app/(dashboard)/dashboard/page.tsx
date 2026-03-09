@@ -5,6 +5,8 @@ import { SlothAlertCard } from "@/components/ui/sloth-alert-card";
 import { ProfileSidebar } from "@/components/layout/profile-sidebar";
 import Link from "next/link";
 import { useReports, Report } from "@/app/hooks/use-reports";
+import { useSubscriptions, useCreateSubscription, useRemoveSubscription } from "@/app/hooks/use-subscription";
+import { Bell, BellOff } from "lucide-react";
 
 // Fallback mock data used when API is unreachable
 const MOCK_POSTS = [
@@ -72,6 +74,26 @@ export default function DashboardHomeFeed() {
   const areaFilter = selectedArea === "citywide" ? {} : { area: selectedArea };
   const { data: apiReports, isLoading, isError } = useReports(areaFilter);
 
+  // Subscription Hooks
+  const { data: subscriptions } = useSubscriptions();
+  const createSubscription = useCreateSubscription();
+  const removeSubscription = useRemoveSubscription();
+
+  // Check if current selected area is subscribed
+  const activeSubscription = selectedArea !== "citywide" 
+    ? subscriptions?.find(sub => sub.area === selectedArea)
+    : null;
+
+  const handleToggleSubscription = () => {
+    if (selectedArea === "citywide") return;
+    
+    if (activeSubscription) {
+      removeSubscription.mutate(activeSubscription.id);
+    } else {
+      createSubscription.mutate({ city: "Metropolis", area: selectedArea });
+    }
+  };
+
   // Use API data if available, otherwise fall back to mock data
   const displayPosts = apiReports && apiReports.length > 0
     ? apiReports.map(mapReportToCard)
@@ -91,19 +113,36 @@ export default function DashboardHomeFeed() {
                <span className="text-[13px] text-slate-500 font-medium">Monitoring activity in your selected area</span>
             </div>
             
-            <div className="relative">
-               <select 
-                  value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 text-slate-800 text-[14px] font-bold py-2 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer hover:border-slate-300 transition-colors"
-               >
-                  <option value="downtown">Downtown District</option>
-                  <option value="uptown">Uptown Suburbs</option>
-                  <option value="industrial">Industrial Zone</option>
-                  <option value="citywide">Citywide (All)</option>
-               </select>
-               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            <div className="flex items-center space-x-3">
+               {selectedArea !== "citywide" && (
+                 <button 
+                   onClick={handleToggleSubscription}
+                   disabled={createSubscription.isPending || removeSubscription.isPending}
+                   className={`flex items-center justify-center p-2 rounded-xl transition-all ${
+                     activeSubscription 
+                       ? "bg-primary/10 text-primary hover:bg-primary/20" 
+                       : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                   }`}
+                   title={activeSubscription ? "Unsubscribe from Area" : "Get Alerts for Area"}
+                 >
+                   {activeSubscription ? <Bell className="w-5 h-5 fill-primary" /> : <BellOff className="w-5 h-5" />}
+                 </button>
+               )}
+
+               <div className="relative">
+                  <select 
+                     value={selectedArea}
+                     onChange={(e) => setSelectedArea(e.target.value)}
+                     className="appearance-none bg-white border border-slate-200 text-slate-800 text-[14px] font-bold py-2 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer hover:border-slate-300 transition-colors"
+                  >
+                     <option value="downtown">Downtown District</option>
+                     <option value="uptown">Uptown Suburbs</option>
+                     <option value="industrial">Industrial Zone</option>
+                     <option value="citywide">Citywide (All)</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
                </div>
             </div>
          </div>

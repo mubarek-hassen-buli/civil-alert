@@ -7,6 +7,7 @@ import { CloudinaryModule } from './integrations/cloudinary/cloudinary.module';
 import { ReportModule } from './modules/report/report.module';
 import { VoteModule } from './modules/vote/vote.module';
 import { UserModule } from './modules/user/user.module';
+import { SubscriptionModule } from './modules/subscription/subscription.module';
 
 @Module({
   imports: [
@@ -18,10 +19,12 @@ import { UserModule } from './modules/user/user.module';
     ReportModule,
     VoteModule,
     UserModule,
+    SubscriptionModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
+
 
 
