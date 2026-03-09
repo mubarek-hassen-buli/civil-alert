@@ -20,11 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useReport } from "@/app/hooks/use-reports";
+import { useVoteCounts, useCastVote } from "@/app/hooks/use-vote";
 
 export default function AdvancedReportDetailPage() {
   const params = useParams();
   const reportId = params.id as string;
   const { data: report, isLoading, isError } = useReport(reportId);
+  const { data: voteCounts } = useVoteCounts(reportId);
+  const castVote = useCastVote(reportId);
 
   // Format time ago helper
   const timeAgo = report?.created_at
@@ -40,9 +43,14 @@ export default function AdvancedReportDetailPage() {
   const urgency = report?.urgency || 'critical';
   const area = report?.area || 'Downtown District';
   const placeName = report?.place_name || '5th Avenue & Market St';
-  const realVotes = report?.realVotes ?? 2400;
-  const fakeVotes = report?.fakeVotes ?? 128;
+  const realVotes = voteCounts?.realVotes ?? (report?.realVotes ?? 2400);
+  const fakeVotes = voteCounts?.fakeVotes ?? (report?.fakeVotes ?? 128);
+  const userVote = voteCounts?.userVote ?? null;
   const confidenceScore = report?.confidence_score ?? 98;
+
+  const handleVote = (type: "real" | "fake") => {
+    castVote.mutate(type);
+  };
 
   if (isLoading) {
     return (
@@ -140,18 +148,32 @@ export default function AdvancedReportDetailPage() {
 
                {/* Interaction Action Bar */}
                <div className="flex items-center space-x-6 py-6 border-y border-slate-100 mt-8">
-                  <div className="flex items-center space-x-2 text-slate-500 hover:text-primary cursor-pointer transition-colors group">
-                     <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-primary/10 flex items-center justify-center">
+                  <button 
+                     onClick={() => handleVote("real")}
+                     className={`flex items-center space-x-2 transition-colors group ${
+                        userVote === "real" ? "text-success" : "text-slate-500 hover:text-success"
+                     }`}
+                  >
+                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                        userVote === "real" ? "bg-success/10" : "bg-slate-50 group-hover:bg-success/10"
+                     }`}>
                         <ThumbsUp className="w-5 h-5" />
                      </div>
                       <span className="font-bold">{realVotes >= 1000 ? (realVotes / 1000).toFixed(1) + 'k' : realVotes}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-slate-500 hover:text-slate-900 cursor-pointer transition-colors group">
-                     <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-slate-100 flex items-center justify-center">
-                        <MessageSquare className="w-5 h-5" />
+                  </button>
+                  <button 
+                     onClick={() => handleVote("fake")}
+                     className={`flex items-center space-x-2 transition-colors group ${
+                        userVote === "fake" ? "text-critical" : "text-slate-500 hover:text-critical"
+                     }`}
+                  >
+                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                        userVote === "fake" ? "bg-critical/10" : "bg-slate-50 group-hover:bg-critical/10"
+                     }`}>
+                        <ThumbsDown className="w-5 h-5" />
                      </div>
                       <span className="font-bold">{fakeVotes}</span>
-                  </div>
+                  </button>
                   <div className="flex items-center space-x-2 text-slate-500 hover:text-critical cursor-pointer transition-colors group">
                      <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-critical/10 flex items-center justify-center">
                         <ShieldAlert className="w-5 h-5" />

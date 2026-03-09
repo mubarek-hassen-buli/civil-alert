@@ -5,6 +5,8 @@ import { RedisModule } from './core/redis/redis.module';
 import { AuthModule } from './core/auth/auth.module';
 import { CloudinaryModule } from './integrations/cloudinary/cloudinary.module';
 import { ReportModule } from './modules/report/report.module';
+import { VoteModule } from './modules/vote/vote.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -14,9 +16,12 @@ import { ReportModule } from './modules/report/report.module';
     AuthModule,
     CloudinaryModule,
     ReportModule,
+    VoteModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
+
 

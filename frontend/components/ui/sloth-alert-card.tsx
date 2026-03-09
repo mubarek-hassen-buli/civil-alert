@@ -1,8 +1,9 @@
+"use client";
+
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { MoreVertical, ThumbsUp, ThumbsDown, Bookmark } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useCastVote, useVoteCounts } from "@/app/hooks/use-vote";
 
 interface SlothAlertCardProps {
   id: string;
@@ -24,9 +25,21 @@ export function SlothAlertCard({
   content,
   hashtags,
   imageSrc,
-  realVotes,
-  fakeVotes
+  realVotes: initialRealVotes,
+  fakeVotes: initialFakeVotes,
 }: SlothAlertCardProps) {
+  // Fetch live vote counts (falls back to initial props if API unavailable)
+  const { data: voteCounts } = useVoteCounts(id);
+  const castVote = useCastVote(id);
+
+  const realVotes = voteCounts?.realVotes ?? initialRealVotes;
+  const fakeVotes = voteCounts?.fakeVotes ?? initialFakeVotes;
+  const userVote = voteCounts?.userVote ?? null;
+
+  const handleVote = (type: "real" | "fake") => {
+    castVote.mutate(type);
+  };
+
   return (
     <div className="bg-white rounded-[24px] p-6 border border-slate-100 flex flex-col mb-6">
       
@@ -68,17 +81,35 @@ export function SlothAlertCard({
       {/* Footer Metrics & Actions */}
       <div className="flex items-center justify-between pt-1">
          <div className="flex items-center space-x-6">
-            <button className="flex items-center space-x-2 text-slate-500 hover:text-success transition-colors group">
-               <div className="p-1.5 rounded-full group-hover:bg-success/10 transition-colors">
+            <button
+              onClick={() => handleVote("real")}
+              className={`flex items-center space-x-2 transition-colors group ${
+                userVote === "real" ? "text-success" : "text-slate-500 hover:text-success"
+              }`}
+            >
+               <div className={`p-1.5 rounded-full transition-colors ${
+                 userVote === "real" ? "bg-success/10" : "group-hover:bg-success/10"
+               }`}>
                  <ThumbsUp className="w-[18px] h-[18px]" />
                </div>
-               <span className="text-[14px] font-bold text-slate-700 group-hover:text-success">{realVotes} Real</span>
+               <span className={`text-[14px] font-bold ${
+                 userVote === "real" ? "text-success" : "text-slate-700 group-hover:text-success"
+               }`}>{realVotes} Real</span>
             </button>
-            <button className="flex items-center space-x-2 text-slate-500 hover:text-critical transition-colors group">
-               <div className="p-1.5 rounded-full group-hover:bg-critical/10 transition-colors">
+            <button
+              onClick={() => handleVote("fake")}
+              className={`flex items-center space-x-2 transition-colors group ${
+                userVote === "fake" ? "text-critical" : "text-slate-500 hover:text-critical"
+              }`}
+            >
+               <div className={`p-1.5 rounded-full transition-colors ${
+                 userVote === "fake" ? "bg-critical/10" : "group-hover:bg-critical/10"
+               }`}>
                  <ThumbsDown className="w-[18px] h-[18px]" />
                </div>
-               <span className="text-[14px] font-bold text-slate-700 group-hover:text-critical">{fakeVotes} Fake</span>
+               <span className={`text-[14px] font-bold ${
+                 userVote === "fake" ? "text-critical" : "text-slate-700 group-hover:text-critical"
+               }`}>{fakeVotes} Fake</span>
             </button>
          </div>
          
