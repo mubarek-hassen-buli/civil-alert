@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #5c45fd; /* Vibrant Purple from new design */
+  --color-primary-foreground: #ffffff;
+  
+  /* Soft background color across the app */
+  --color-background: #f1f4f9; 
+  --color-foreground: #1e293b;
+  
+  --color-muted: #f8fafc;
+  --color-muted-foreground: #64748b;
+  
+  --color-border: #e2e8f0;
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-critical: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Form/Input specific */
+  --color-input-bg: #f8fafc;
+  
+  /* Auth Specific */
+  --color-btn-purple: #5c45fd; 
+  --color-btn-purple-hover: #4e3ae1;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base utility for hiding scrollbar when needed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
