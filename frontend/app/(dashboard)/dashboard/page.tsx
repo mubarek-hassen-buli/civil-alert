@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Smile, Mic, Send, Paperclip } from "lucide-react";
 import { SlothAlertCard } from "@/components/ui/sloth-alert-card";
 import { ProfileSidebar } from "@/components/layout/profile-sidebar";
 import Link from "next/link";
+import { useReports, Report } from "@/app/hooks/use-reports";
 
-// MOCK DATA MAPPED TO NEW STRUCTURE
+// Fallback mock data used when API is unreachable
 const MOCK_POSTS = [
   {
     id: "1",
@@ -48,8 +48,34 @@ const MOCK_POSTS = [
   }
 ];
 
+/** Transforms an API report into the shape expected by SlothAlertCard. */
+function mapReportToCard(report: Report) {
+  return {
+    id: report.id,
+    author: {
+      avatar: report.profiles?.avatar_url || "https://i.pravatar.cc/150?u=default",
+      name: report.profiles?.full_name || report.profiles?.username || "Anonymous",
+      role: report.category.replace('_', ' '),
+    },
+    content: report.description,
+    hashtags: [report.category, report.urgency, report.area],
+    imageSrc: report.media_urls?.[0],
+    realVotes: report.realVotes ?? 0,
+    fakeVotes: report.fakeVotes ?? 0,
+  };
+}
+
 export default function DashboardHomeFeed() {
   const [selectedArea, setSelectedArea] = useState<string>("downtown");
+
+  // Fetch reports from API, filtered by area (unless "citywide")
+  const areaFilter = selectedArea === "citywide" ? {} : { area: selectedArea };
+  const { data: apiReports, isLoading, isError } = useReports(areaFilter);
+
+  // Use API data if available, otherwise fall back to mock data
+  const displayPosts = apiReports && apiReports.length > 0
+    ? apiReports.map(mapReportToCard)
+    : MOCK_POSTS;
 
   return (
     <div className="flex w-full min-h-screen justify-between">
@@ -69,7 +95,7 @@ export default function DashboardHomeFeed() {
                <select 
                   value={selectedArea}
                   onChange={(e) => setSelectedArea(e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 text-slate-800 text-[14px] font-bold py-2 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm hover:border-slate-300 transition-colors"
+                  className="appearance-none bg-white border border-slate-200 text-slate-800 text-[14px] font-bold py-2 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer hover:border-slate-300 transition-colors"
                >
                   <option value="downtown">Downtown District</option>
                   <option value="uptown">Uptown Suburbs</option>
@@ -97,9 +123,16 @@ export default function DashboardHomeFeed() {
             </Link>
          </div>
 
+         {/* Loading State */}
+         {isLoading && (
+           <div className="flex items-center justify-center py-12">
+             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+           </div>
+         )}
+
          {/* Feed List */}
          <div className="flex flex-col flex-1">
-            {MOCK_POSTS.map(post => (
+            {displayPosts.map(post => (
                <SlothAlertCard key={post.id} {...post} />
             ))}
          </div>

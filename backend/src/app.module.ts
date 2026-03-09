@@ -3,10 +3,20 @@ import { ConfigModule } from './core/config/config.module';
 import { SupabaseModule } from './integrations/supabase/supabase.module';
 import { RedisModule } from './core/redis/redis.module';
 import { AuthModule } from './core/auth/auth.module';
+import { CloudinaryModule } from './integrations/cloudinary/cloudinary.module';
+import { ReportModule } from './modules/report/report.module';
 
 @Module({
-  imports: [ConfigModule, SupabaseModule, RedisModule, AuthModule],
+  imports: [
+    ConfigModule,
+    SupabaseModule,
+    RedisModule,
+    AuthModule,
+    CloudinaryModule,
+    ReportModule,
+  ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
+

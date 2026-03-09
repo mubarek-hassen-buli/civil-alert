@@ -1,16 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { 
-  Plus, 
   MapPin, 
-  Info, 
   LayoutGrid, 
   AlertTriangle, 
   UploadCloud, 
-  Image as ImageIcon,
-  FileVideo,
-  Paperclip,
   Send,
   X,
   Camera,
@@ -20,8 +15,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/app/lib/utils";
+import { useReportStore } from "@/app/stores/report-store";
+import { useCreateReport } from "@/app/hooks/use-reports";
+import { useRouter } from "next/navigation";
 
-// Modern Category Icons
+// Category mapping: UI id → API category value
+const CATEGORY_MAP: Record<string, string> = {
+  infrastructure: 'roads',
+  safety: 'public_services',
+  utilities: 'public_services',
+  environmental: 'business',
+};
+
+// Urgency mapping: UI value → API urgency value
+const URGENCY_MAP: Record<string, string> = {
+  low: 'info',
+  medium: 'warning',
+  critical: 'critical',
+};
+
 const categories = [
    { id: "infrastructure", name: "Infrastructure", icon: LayoutGrid, color: "bg-blue-500" },
    { id: "safety", name: "Public Safety", icon: AlertTriangle, color: "bg-red-500" },
@@ -30,8 +42,44 @@ const categories = [
 ];
 
 export default function AdvancedCreateReportPage() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const store = useReportStore();
+  const createReport = useCreateReport();
+
   const [urgency, setUrgency] = useState<"low" | "medium" | "critical">("low");
   const [category, setCategory] = useState("infrastructure");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      Array.from(e.target.files).forEach(file => store.addFile(file));
+    }
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+
+    // Build FormData for submission
+    const formData = new FormData();
+    formData.append('title', store.title);
+    formData.append('description', store.description);
+    formData.append('category', CATEGORY_MAP[category] || 'roads');
+    formData.append('urgency', URGENCY_MAP[urgency] || 'info');
+    formData.append('city', store.city || 'Default City');
+    formData.append('area', store.area || 'downtown');
+    if (store.placeName) formData.append('place_name', store.placeName);
+    store.files.forEach(file => formData.append('media', file));
+
+    try {
+      await createReport.mutateAsync(formData);
+      store.reset();
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create report';
+      setError(message);
+    }
+  };
 
   return (
     <div className="flex w-full min-h-screen justify-between">
@@ -70,6 +118,8 @@ export default function AdvancedCreateReportPage() {
                         <Input 
                            placeholder="e.g. Major water main break on 5th Ave" 
                            className="h-14 bg-slate-50 border-slate-200 text-lg px-4 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                           value={store.title}
+                           onChange={(e) => store.setField('title', e.target.value)}
                         />
                      </div>
 
@@ -138,6 +188,8 @@ export default function AdvancedCreateReportPage() {
                            rows={4}
                            placeholder="Describe the incident, potential risks, and any other helpful context..." 
                            className="w-full bg-slate-50 border border-slate-200 text-[15px] p-4 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none"
+                           value={store.description}
+                           onChange={(e) => store.setField('description', e.target.value)}
                         />
                      </div>
 
@@ -205,29 +257,66 @@ export default function AdvancedCreateReportPage() {
                      <div className="bg-white rounded-[24px] border border-slate-100 p-6 flex flex-col">
                         <label className="text-sm font-bold text-slate-700 mb-4 flex items-center justify-between">
                            <span>Media Assets</span>
-                           <span className="text-xs text-slate-400 font-medium">Optional</span>
+                           <span className="text-xs text-slate-400 font-medium">Required (at least 1)</span>
                         </label>
                         
-                        <div className="flex-1 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group p-6 text-center">
+                        <input
+                           ref={fileInputRef}
+                           type="file"
+                           accept="image/jpeg,image/png,image/webp,video/mp4"
+                           multiple
+                           onChange={handleFileChange}
+                           className="hidden"
+                        />
+
+                        <div 
+                           className="flex-1 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group p-6 text-center"
+                           onClick={() => fileInputRef.current?.click()}
+                        >
                            <div className="w-14 h-14 rounded-full bg-white border border-slate-100 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
                               <Camera className="w-6 h-6" />
                            </div>
                            <span className="text-[15px] font-bold text-slate-700 mb-1 flex items-center">
                               <UploadCloud className="w-4 h-4 mr-2" /> Upload Photos
                            </span>
-                           <span className="text-sm text-slate-500 font-medium">Drag & drop or click to browse. Max 5MB.</span>
+                           <span className="text-sm text-slate-500 font-medium">Click to browse. Max 10MB per file.</span>
                         </div>
+
+                        {/* Selected Files Preview */}
+                        {store.files.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-4">
+                            {store.files.map((file, index) => (
+                              <div key={index} className="flex items-center bg-slate-100 rounded-lg px-3 py-2 text-sm font-medium text-slate-700">
+                                <span className="truncate max-w-[120px]">{file.name}</span>
+                                <button onClick={() => store.removeFile(index)} className="ml-2 text-slate-400 hover:text-slate-700">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                      </div>
 
                   </div>
                </section>
 
+               {/* Error Message */}
+               {error && (
+                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 font-medium">
+                   {error}
+                 </div>
+               )}
+
                {/* Action Footer */}
                <div className="flex items-center justify-end pt-6 space-x-4 border-t border-slate-100">
                   <Button variant="ghost" className="text-slate-500 hover:text-slate-900 rounded-full px-6 font-semibold h-12">Save Draft</Button>
-                  <Button className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center space-x-2 h-12 px-8">
-                     <span className="font-bold text-[15px]">Submit Report</span>
+                  <Button 
+                    className="bg-primary hover:bg-primary/90 text-white rounded-full flex items-center space-x-2 h-12 px-8"
+                    onClick={handleSubmit}
+                    disabled={createReport.isPending}
+                  >
+                     <span className="font-bold text-[15px]">{createReport.isPending ? 'Submitting...' : 'Submit Report'}</span>
                      <Send className="w-4 h-4 ml-1" />
                   </Button>
                </div>

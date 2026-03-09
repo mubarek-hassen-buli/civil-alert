@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 import { 
   AlertTriangle, 
   MapPin, 
@@ -18,8 +19,39 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useReport } from "@/app/hooks/use-reports";
 
 export default function AdvancedReportDetailPage() {
+  const params = useParams();
+  const reportId = params.id as string;
+  const { data: report, isLoading, isError } = useReport(reportId);
+
+  // Format time ago helper
+  const timeAgo = report?.created_at
+    ? new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '2 hours ago';
+
+  // Use API data or fallback values
+  const title = report?.title || 'Major water main rupture at the intersection of 5th Avenue and Market Street';
+  const description = report?.description || 'A significant water main break occurred earlier this morning, causing extensive flooding across the intersection of 5th Avenue and Market Street.';
+  const heroImage = report?.media_urls?.[0] || 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=1200&h=800';
+  const authorName = report?.profiles?.full_name || report?.profiles?.username || 'X_AE_A-13';
+  const authorAvatar = report?.profiles?.avatar_url || 'https://i.pravatar.cc/150?u=a04258a2462d826712d';
+  const urgency = report?.urgency || 'critical';
+  const area = report?.area || 'Downtown District';
+  const placeName = report?.place_name || '5th Avenue & Market St';
+  const realVotes = report?.realVotes ?? 2400;
+  const fakeVotes = report?.fakeVotes ?? 128;
+  const confidenceScore = report?.confidence_score ?? 98;
+
+  if (isLoading) {
+    return (
+      <div className="flex w-full min-h-screen items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-full min-h-screen justify-between bg-white">
       
@@ -51,38 +83,38 @@ export default function AdvancedReportDetailPage() {
                
                {/* Badges & Meta */}
                <div className="flex items-center justify-between">
-                  <div className="flex space-x-2">
-                     <Badge variant="critical" className="px-3 py-1 bg-critical text-white rounded-full font-bold">CRITICAL</Badge>
-                     <Badge variant="neutral" className="px-3 py-1 bg-slate-100 text-slate-700 border-none rounded-full font-bold">#WF-9021</Badge>
-                  </div>
-                  <div className="flex items-center text-sm font-semibold text-slate-500">
-                     <Clock className="w-4 h-4 mr-1.5" />
-                     2 hours ago
-                  </div>
-               </div>
+                   <div className="flex space-x-2">
+                      <Badge variant="critical" className="px-3 py-1 bg-critical text-white rounded-full font-bold">{urgency.toUpperCase()}</Badge>
+                      <Badge variant="neutral" className="px-3 py-1 bg-slate-100 text-slate-700 border-none rounded-full font-bold">#{reportId?.slice(0, 8)}</Badge>
+                   </div>
+                   <div className="flex items-center text-sm font-semibold text-slate-500">
+                      <Clock className="w-4 h-4 mr-1.5" />
+                      {timeAgo}
+                   </div>
+                </div>
 
                {/* Title */}
                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight">
-                  Major water main rupture at the intersection of 5th Avenue and Market Street
-               </h1>
+                   {title}
+                </h1>
 
                {/* Author Block */}
                <div className="flex items-center space-x-3 py-2">
-                  <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
-                     <img src="https://i.pravatar.cc/150?u=a04258a2462d826712d" alt="Author" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex flex-col">
-                     <div className="flex items-center space-x-2">
-                        <span className="font-bold text-slate-900 text-[15px]">X_AE_A-13</span>
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                     </div>
-                     <span className="text-sm font-medium text-slate-500">City Planner, CivicAlerts</span>
-                  </div>
-               </div>
+                   <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
+                      <img src={authorAvatar} alt="Author" className="w-full h-full object-cover" />
+                   </div>
+                   <div className="flex flex-col">
+                      <div className="flex items-center space-x-2">
+                         <span className="font-bold text-slate-900 text-[15px]">{authorName}</span>
+                         <CheckCircle2 className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-500">{report?.category?.replace('_', ' ') || 'City Planner, CivicAlerts'}</span>
+                   </div>
+                </div>
 
                {/* Massive Image Header */}
                <div className="relative w-full h-[400px] md:h-[500px] rounded-[24px] overflow-hidden bg-slate-100 ring-1 ring-slate-900/5 mt-4">
-                  <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=1200&h=800" className="w-full h-full object-cover" alt="Incident Hero" />
+                   <img src={heroImage} className="w-full h-full object-cover" alt="Incident Hero" />
                   
                   {/* Floating Location Chip */}
                   <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-2xl p-4 border border-white flex items-center justify-between">
@@ -90,10 +122,10 @@ export default function AdvancedReportDetailPage() {
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                            <MapPin className="w-5 h-5" />
                         </div>
-                        <div className="flex flex-col">
-                           <span className="font-bold text-slate-900 text-sm">5th Avenue & Market St</span>
-                           <span className="text-xs font-semibold text-slate-500">Downtown District • 0.8 miles away</span>
-                        </div>
+                         <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 text-sm">{placeName}</span>
+                            <span className="text-xs font-semibold text-slate-500">{area}</span>
+                         </div>
                      </div>
                      <Button className="rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold h-9 px-4 text-xs">
                         View Map
@@ -103,13 +135,8 @@ export default function AdvancedReportDetailPage() {
 
                {/* Detailed Body Paragraphs */}
                <div className="pt-6 text-lg text-slate-700 leading-relaxed font-medium space-y-5">
-                  <p>
-                     A significant water main break occurred earlier this morning, causing extensive flooding across the intersection of 5th Avenue and Market Street. Emergency sensors detected a massive pressure drop at approximately 09:12 AM PST, corroborated by multiple citizen reports.
-                  </p>
-                  <p>
-                     Local authorities have cordoned off the affected area. Current estimates suggest that water service for surrounding residential blocks will remain suspended for the next 12 to 24 hours while repairs are underway. Traffic is heavily congested; drivers are strictly advised to seek alternate routes immediately to avoid becoming stranded.
-                  </p>
-               </div>
+                   <p>{description}</p>
+                </div>
 
                {/* Interaction Action Bar */}
                <div className="flex items-center space-x-6 py-6 border-y border-slate-100 mt-8">
@@ -117,13 +144,13 @@ export default function AdvancedReportDetailPage() {
                      <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-primary/10 flex items-center justify-center">
                         <ThumbsUp className="w-5 h-5" />
                      </div>
-                     <span className="font-bold">2.4k</span>
+                      <span className="font-bold">{realVotes >= 1000 ? (realVotes / 1000).toFixed(1) + 'k' : realVotes}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-500 hover:text-slate-900 cursor-pointer transition-colors group">
                      <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-slate-100 flex items-center justify-center">
                         <MessageSquare className="w-5 h-5" />
                      </div>
-                     <span className="font-bold">128</span>
+                      <span className="font-bold">{fakeVotes}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-500 hover:text-critical cursor-pointer transition-colors group">
                      <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-critical/10 flex items-center justify-center">
@@ -170,10 +197,10 @@ export default function AdvancedReportDetailPage() {
                <div className="flex flex-col space-y-2 mb-6">
                   <div className="flex justify-between items-end">
                      <span className="text-[15px] font-bold text-slate-900">Confidence Meter</span>
-                     <span className="text-[15px] font-bold text-primary">98% Verified</span>
-                  </div>
-                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                     <div className="h-full bg-primary rounded-full w-[98%]"></div>
+                      <span className="text-[15px] font-bold text-primary">{Math.round(confidenceScore)}% Verified</span>
+                   </div>
+                   <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${confidenceScore}%` }}></div>
                   </div>
                   <p className="text-sm font-medium text-slate-500 mt-2">Data corroborated by 12 independent sensors and 5 citizen reports.</p>
                </div>
