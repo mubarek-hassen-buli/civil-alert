@@ -1,19 +1,42 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuthStore } from "@/app/stores/auth-store";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signUp, signInWithGoogle } = useAuthStore();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    setError(null);
+    setLoading(true);
+
+    const result = await signUp(email, password, fullName);
+
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+    }
   };
+
+  const handleGoogleSignup = async () => {
+    await signInWithGoogle();
+  };
+
   return (
     <div className="w-full flex-1 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16 pt-8 md:pt-0">
       
@@ -34,12 +57,19 @@ export default function SignupPage() {
           <p className="text-sm text-neutral-500">Join us to make your city a better place</p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 font-medium">
+            {error}
+          </div>
+        )}
+
         {/* Social Auth */}
         <div className="flex flex-col space-y-3">
           <Button 
             variant="outline" 
             className="w-full h-12 flex items-center justify-center gap-3 border-zinc-200"
-            onClick={() => router.push("/dashboard")}
+            onClick={handleGoogleSignup}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -68,6 +98,9 @@ export default function SignupPage() {
               type="text" 
               placeholder="Full Name" 
               className="h-12 bg-zinc-50/50 border-zinc-100 placeholder:text-zinc-400"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
             />
           </div>
           <div className="space-y-1">
@@ -75,6 +108,9 @@ export default function SignupPage() {
               type="email" 
               placeholder="Email" 
               className="h-12 bg-zinc-50/50 border-zinc-100 placeholder:text-zinc-400"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div className="space-y-1 relative">
@@ -82,11 +118,20 @@ export default function SignupPage() {
               type="password" 
               placeholder="Password" 
               className="h-12 bg-zinc-50/50 border-zinc-100 placeholder:text-zinc-400 pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
             />
           </div>
 
-          <Button type="submit" variant="purple" className="w-full h-12 text-base font-medium mt-2">
-            Sign Up
+          <Button 
+            type="submit" 
+            variant="purple" 
+            className="w-full h-12 text-base font-medium mt-2"
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Sign Up"}
           </Button>
         </form>
 

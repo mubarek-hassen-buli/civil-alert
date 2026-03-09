@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from './core/config/config.module';
+import { SupabaseModule } from './integrations/supabase/supabase.module';
+import { RedisModule } from './core/redis/redis.module';
+import { AuthModule } from './core/auth/auth.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [ConfigModule, SupabaseModule, RedisModule, AuthModule],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

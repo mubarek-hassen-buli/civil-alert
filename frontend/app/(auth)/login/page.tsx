@@ -1,19 +1,41 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuthStore } from "@/app/stores/auth-store";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn, signInWithGoogle } = useAuthStore();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    setError(null);
+    setLoading(true);
+
+    const result = await signIn(email, password);
+
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+    }
   };
+
+  const handleGoogleLogin = async () => {
+    await signInWithGoogle();
+  };
+
   return (
     <div className="w-full flex-1 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16 pt-8 md:pt-0">
       
@@ -34,12 +56,19 @@ export default function LoginPage() {
           <p className="text-sm text-neutral-500">Let&apos;s login to grab amazing deal</p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 font-medium">
+            {error}
+          </div>
+        )}
+
         {/* Social Auth */}
         <div className="flex flex-col space-y-3">
           <Button 
             variant="outline" 
             className="w-full h-12 flex items-center justify-center gap-3 border-zinc-200"
-            onClick={() => router.push("/dashboard")}
+            onClick={handleGoogleLogin}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -68,7 +97,9 @@ export default function LoginPage() {
               type="email" 
               placeholder="Email" 
               className="h-12 bg-zinc-50/50 border-zinc-100 placeholder:text-zinc-400"
-              defaultValue="rownok@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div className="space-y-1 relative">
@@ -76,11 +107,10 @@ export default function LoginPage() {
               type="password" 
               placeholder="Password" 
               className="h-12 bg-zinc-50/50 border-zinc-100 placeholder:text-zinc-400 pr-10"
-              defaultValue="*************"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
-            <button type="button" className="absolute right-3 top-3 text-zinc-400">
-               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
           </div>
 
           <div className="flex items-center justify-between text-sm">
@@ -93,8 +123,13 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Button type="submit" variant="purple" className="w-full h-12 text-base font-medium mt-2">
-            Login
+          <Button 
+            type="submit" 
+            variant="purple" 
+            className="w-full h-12 text-base font-medium mt-2"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Login"}
           </Button>
         </form>
 
