@@ -8,6 +8,7 @@ import { ReportModule } from './modules/report/report.module';
 import { VoteModule } from './modules/vote/vote.module';
 import { UserModule } from './modules/user/user.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
 
 @Module({
   imports: [
@@ -20,11 +21,13 @@ import { SubscriptionModule } from './modules/subscription/subscription.module';
     VoteModule,
     UserModule,
     SubscriptionModule,
+    ModerationModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
+
 
 
 

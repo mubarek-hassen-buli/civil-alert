@@ -22,6 +22,7 @@ const navItems = [
   { name: "Subscriptions", href: "/subscriptions", icon: CreditCard },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Help & Support", href: "/support", icon: HelpCircle },
+  { name: "Logout", href: "/logout", icon: LogOut },
 ];
 
 export function Sidebar() {
@@ -82,21 +83,7 @@ export function Sidebar() {
 
 
 
-      {/* User Info Bottom */}
-      <div className="mt-auto px-4 flex items-center justify-between pt-2">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
-            <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Azunyan U. Wu" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-900">Alex Johnson</span>
-            <span className="text-xs text-slate-500 font-medium">Basic Member</span>
-          </div>
-        </div>
-        <button className="text-primary hover:bg-primary/5 p-2 rounded-xl transition-colors">
-           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5v14l8-7zM2 5h8M2 19h8"/></svg>
-        </button>
-      </div>
+
 
     </div>
   );
